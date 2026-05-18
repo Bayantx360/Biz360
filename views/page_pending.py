@@ -18,7 +18,7 @@ import urllib.parse
 
 def page_pending_payment():
     inject_styles()
-    user   = st.session_state.get("user", {})
+    user   = st.session_state.get("user") or {}
     plan   = user.get("plan_type") or st.session_state.get("pending_plan", "monthly")
     email  = user.get("email")    or st.session_state.get("pending_email", "")
     amount = (PAYMENT_DETAILS["yearly_price"]
@@ -33,8 +33,7 @@ def page_pending_payment():
     with col:
         st.markdown(
             "<div style='text-align:center;font-size:2rem;font-weight:800;"
-            #"color:#0f172a;margin-bottom:0.25rem;'>📊 BizPulse</div>",
-            "color:#d4af37;margin-bottom:0.25rem;'>📊 BizPulse</div>",
+            "color:#0f172a;margin-bottom:0.25rem;'>📊 BizPulse</div>",
             unsafe_allow_html=True,
         )
 
@@ -45,11 +44,11 @@ def page_pending_payment():
         )
         st.markdown(
             "<div style='text-align:center;font-size:1.4rem;font-weight:800;"
-            "color:#16a34a;margin-bottom:0.25rem;'>Account created!</div>",
+            "color:#0f172a;margin-bottom:0.25rem;'>Account created!</div>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<div style='text-align:center;color:#d4af37;font-size:0.9rem;"
+            "<div style='text-align:center;color:#64748b;font-size:0.9rem;"
             "margin-bottom:1rem;'>One last step — complete your payment to activate "
             "full access.</div>",
             unsafe_allow_html=True,
@@ -88,4 +87,3 @@ def page_pending_payment():
 # ─────────────────────────────────────────────
 #  PAGE: FORGOT PASSWORD
 # ─────────────────────────────────────────────
-
