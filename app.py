@@ -1518,7 +1518,7 @@ def page_pending_payment():
     with col:
         st.markdown(
             "<div style='text-align:center;font-size:2rem;font-weight:800;"
-            "color:#0f172a;margin-bottom:0.25rem;'>📊 BizPulse</div>",
+            "color:#D4AF37;margin-bottom:0.25rem;'>📊 BizPulse</div>",
             unsafe_allow_html=True,
         )
 
@@ -1529,7 +1529,7 @@ def page_pending_payment():
         )
         st.markdown(
             "<div style='text-align:center;font-size:1.4rem;font-weight:800;"
-            "color:#0f172a;margin-bottom:0.25rem;'>Account created!</div>",
+            "color:#00FF9C;margin-bottom:0.25rem;'>Account created Successfully!</div>",
             unsafe_allow_html=True,
         )
         st.markdown(
