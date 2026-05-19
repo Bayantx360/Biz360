@@ -1212,7 +1212,7 @@ def page_login():
 <span>&#9679;</span> Built for Nigerian SMEs &middot; Powered by real-time data
 </div>
 <div class="lp-headline">
-Run your business<br>like you <span>know your numbers.</span>
+Run your business<br>efficiently <span>knowing your numbers.</span>
 </div>
 <div class="lp-sub">
 Sales tracking, inventory control, expense management and profit analytics &#8212;
@@ -1495,7 +1495,7 @@ def page_pending_payment():
         )
         st.markdown(
             "<div style='text-align:center;font-size:1.4rem;font-weight:800;"
-            "color:#D4AF37;margin-bottom:0.25rem;'>Account created!</div>",
+            "color:#00FF9C;margin-bottom:0.25rem;'>Account created!</div>",
             unsafe_allow_html=True,
         )
         st.markdown(
