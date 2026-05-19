@@ -91,37 +91,21 @@ color: var(--text-primary);
 }
 #MainMenu, footer { visibility: hidden; }
 
-/* Keep header and ALL its children fully visible — sidebar toggle lives here */
-header, [data-testid="stHeader"] {
-background:  rgba(8,11,15,0.95) !important;
-visibility:  visible !important;
-display:     flex    !important;
-opacity:     1       !important;
-z-index:     999990  !important;
+/* ── Header: hide decoration, keep toggle visible ── */
+header[data-testid="stHeader"] {
+background: rgba(8,11,15,0.95) !important;
 backdrop-filter: blur(8px);
 border-bottom: 1px solid #1F2D3D;
 }
-/* Do NOT hide the toolbar — it contains the sidebar toggle button */
-header [data-testid="stToolbar"],
-[data-testid="stHeader"] [data-testid="stToolbar"] {
-visibility:  visible !important;
-display:     flex    !important;
-opacity:     1       !important;
-}
-
-/* Ensure every possible Streamlit sidebar toggle selector is visible */
+header[data-testid="stHeader"] > div:first-child { visibility: hidden; }
 [data-testid="collapsedControl"],
 [data-testid="stSidebarCollapsedControl"],
-[data-testid="stSidebarToggle"],
-[data-testid="stSidebarToggleButton"],
-button[aria-label="Open sidebar"],
-button[aria-label="Close sidebar"],
-button[aria-label="collapse sidebar"],
-button[aria-label="expand sidebar"] {
-display:        flex   !important;
+button[kind="header"],
+[data-testid="stHeader"] button {
 visibility:     visible !important;
-opacity:        1      !important;
-pointer-events: auto   !important;
+opacity:        1       !important;
+pointer-events: all    !important;
+z-index:        999999 !important;
 }
 
 /* Custom sidebar tab injected by JS below */
@@ -252,6 +236,18 @@ font-size: 0.68rem;
 color: var(--text-muted);
 margin-top: 0.25rem;
 font-family: var(--font-body);
+}
+.kpi-header {
+display: flex;
+align-items: center;
+gap: 0.4rem;
+margin-bottom: 0.3rem;
+}
+.kpi-icon {
+font-size: 0.85rem;
+line-height: 1;
+opacity: 0.85;
+flex-shrink: 0;
 }
 .kpi-positive { color: var(--jade) !important; }
 .kpi-negative { color: var(--ruby) !important; }
@@ -628,44 +624,8 @@ border-top:1px solid #1F2D3D; margin-top:1rem;
 
 
 def inject_sidebar_toggle():
-    """
-    Forces Streamlit's native sidebar toggle to remain visible and functional.
-    We do NOT inject a competing custom button — the native toggle is already
-    restored via CSS. This function is kept for backward compatibility.
-    """
-    st.markdown("""
-<script>
-(function() {
-// Ensure Streamlit's own sidebar toggle button stays visible.
-// We find it by every known selector and force visibility.
-function ensureToggleVisible() {
-var selectors = [
-'[data-testid="collapsedControl"]',
-'[data-testid="stSidebarCollapsedControl"]',
-'[data-testid="stSidebarToggle"]',
-'[data-testid="stSidebarToggleButton"]',
-'button[aria-label="Open sidebar"]',
-'button[aria-label="Close sidebar"]',
-'button[aria-label="collapse sidebar"]',
-'button[aria-label="expand sidebar"]'
-];
-selectors.forEach(function(sel) {
-var el = document.querySelector(sel);
-if (el) {
-el.style.display    = '';
-el.style.visibility = 'visible';
-el.style.opacity    = '1';
-el.style.pointerEvents = 'auto';
-}
-});
-}
-// Run immediately and after a short delay to catch late mounts
-ensureToggleVisible();
-setTimeout(ensureToggleVisible, 500);
-setTimeout(ensureToggleVisible, 1500);
-})();
-</script>
-    """, unsafe_allow_html=True)
+    """No-op: sidebar toggle visibility is handled entirely via CSS."""
+    pass
 
 
 # ─────────────────────────────────────────────
@@ -1159,15 +1119,19 @@ def compute_insights(sales_df, products_df, expenses_df):
 #  UI COMPONENT HELPERS
 # ─────────────────────────────────────────────
 
-def kpi_card(label, value, sub="", positive=None):
+def kpi_card(label, value, sub="", positive=None, icon=""):
     sub_class = ""
     if positive is True:
         sub_class = "kpi-positive"
     elif positive is False:
         sub_class = "kpi-negative"
+    icon_html = f'<div class="kpi-icon">{icon}</div>' if icon else ""
     st.markdown(f"""
 <div class="kpi-card">
+<div class="kpi-header">
+{icon_html}
 <div class="kpi-label">{label}</div>
+</div>
 <div class="kpi-value">{value}</div>
 {f'<div class="kpi-sub {sub_class}">{sub}</div>' if sub else ""}
 </div>
@@ -1760,20 +1724,20 @@ Here's your business snapshot for
     c1, c2 = st.columns(2)
     with c1:
         kpi_card("Today's Revenue", fmt_naira(kpis["today_revenue"]),
-                 f"{kpis['today_txn']} transactions today")
+                 f"{kpis['today_txn']} transactions today", icon="💰")
     with c2:
         kpi_card("This Week", fmt_naira(kpis["week_revenue"]),
                  f"{'\u25b2' if growth >= 0 else '\u25bc'} {abs(growth):.1f}% vs last week",
-                 positive=(growth >= 0))
+                 positive=(growth >= 0), icon="📈")
     c3, c4 = st.columns(2)
     with c3:
         kpi_card("Net Profit (Month)", fmt_naira(kpis["net_profit"]),
                  f"After \u20a6{kpis['month_expenses']:,.0f} expenses",
-                 positive=(kpis["net_profit"] >= 0))
+                 positive=(kpis["net_profit"] >= 0), icon="📊")
     with c4:
         kpi_card("Low Stock Alerts", str(low_count),
                  "Products need restocking" if low_count > 0 else "All products stocked",
-                 positive=(low_count == 0))
+                 positive=(low_count == 0), icon="⚠️" if low_count > 0 else "✅")
     # ── Charts ──
     if not sales_df.empty:
         col_left, col_right = st.columns([3, 2])
@@ -2360,7 +2324,7 @@ def page_record_sale():
             today_sales = sales_df_today[sales_df_today['sale_date'].dt.date == today]
             kpi_card("Today's Revenue",
                      fmt_naira(today_sales['total_amount'].sum()),
-                     f"{len(today_sales)} transactions today")
+                     f"{len(today_sales)} transactions today", icon="💰")
             if not today_sales.empty:
                 st.markdown('**Recent transactions:**')
                 recent = today_sales.sort_values('sale_date', ascending=False).head(5)
@@ -2370,7 +2334,7 @@ def page_record_sale():
                         f"= {fmt_naira(r['total_amount'])} _{r['payment_method']}_"
                     )
         else:
-            kpi_card("Today's Revenue", "₦0.00", "No sales yet today")
+            kpi_card("Today's Revenue", "₦0.00", "No sales yet today", icon="💰")
     except Exception:
         st.info('No sales data yet.')
 
@@ -2417,11 +2381,11 @@ def page_sales_history():
     # ── Summary KPIs ──
     sk1, sk2, sk3 = st.columns(3)
     with sk1:
-        kpi_card("Revenue (filtered)", fmt_naira(filtered["total_amount"].sum()), f"{len(filtered)} transactions")
+        kpi_card("Revenue (filtered)", fmt_naira(filtered["total_amount"].sum()), f"{len(filtered)} transactions", icon="💰")
     with sk2:
-        kpi_card("Profit (filtered)", fmt_naira(filtered["gross_profit"].sum()), "Gross margin")
+        kpi_card("Profit (filtered)", fmt_naira(filtered["gross_profit"].sum()), "Gross margin", icon="📈")
     with sk3:
-        kpi_card("Avg Sale Value", fmt_naira(filtered["total_amount"].mean() if not filtered.empty else 0), "Per transaction")
+        kpi_card("Avg Sale Value", fmt_naira(filtered["total_amount"].mean() if not filtered.empty else 0), "Per transaction", icon="🧾")
 
     st.markdown("---")
 
@@ -2645,16 +2609,16 @@ def page_products():
             # Summary metrics
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                kpi_card("Total Products", str(len(products_df)), "In your catalog")
+                kpi_card("Total Products", str(len(products_df)), "In your catalog", icon="📦")
             with c2:
                 total_stock_val = (products_df["stock_quantity"] * products_df["selling_price"]).sum()
-                kpi_card("Inventory Value", fmt_naira(total_stock_val), "At selling price")
+                kpi_card("Inventory Value", fmt_naira(total_stock_val), "At selling price", icon="🏷️")
             with c3:
                 total_cost_val = (products_df["stock_quantity"] * products_df["cost_price"]).sum()
-                kpi_card("Inventory Cost", fmt_naira(total_cost_val), "At cost price")
+                kpi_card("Inventory Cost", fmt_naira(total_cost_val), "At cost price", icon="🏦")
             with c4:
                 low_count = len(products_df[products_df["stock_quantity"] <= products_df["reorder_level"]])
-                kpi_card("Low Stock", str(low_count), "Need restocking", positive=(low_count == 0))
+                kpi_card("Low Stock", str(low_count), "Need restocking", positive=(low_count == 0), icon="⚠️" if low_count > 0 else "✅")
 
             st.markdown("---")
 
@@ -2916,12 +2880,12 @@ def page_expenses():
             c1, c2, c3 = st.columns(3)
             with c1:
                 kpi_card("Total Expenses", fmt_naira(filtered["amount"].sum()),
-                         f"In selected period")
+                         f"In selected period", icon="💸")
             with c2:
-                kpi_card("Transactions", str(len(filtered)), "Expense entries")
+                kpi_card("Transactions", str(len(filtered)), "Expense entries", icon="🧾")
             with c3:
                 avg = filtered["amount"].mean() if not filtered.empty else 0
-                kpi_card("Average Expense", fmt_naira(avg), "Per entry")
+                kpi_card("Average Expense", fmt_naira(avg), "Per entry", icon="📊")
 
             if not filtered.empty:
                 # Category breakdown chart
@@ -3105,17 +3069,17 @@ def page_insights():
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         kpi_card("Avg Daily Revenue",
-                 fmt_naira(insights["avg_daily_revenue"]), "Based on all recorded days")
+                 fmt_naira(insights["avg_daily_revenue"]), "Based on all recorded days", icon="📅")
     with c2:
-        kpi_card("Best Sales Day", insights.get("best_day", "N/A"), "Highest revenue weekday")
+        kpi_card("Best Sales Day", insights.get("best_day", "N/A"), "Highest revenue weekday", icon="🏆")
     with c3:
-        kpi_card("Slowest Day", insights.get("worst_day", "N/A"), "Lowest revenue weekday")
+        kpi_card("Slowest Day", insights.get("worst_day", "N/A"), "Lowest revenue weekday", icon="🐢")
     with c4:
         if not insights["top_products_revenue"].empty:
             best = insights["top_products_revenue"].iloc[0]["product_name"]
         else:
             best = "N/A"
-        kpi_card("Best Seller", best, "By total revenue")
+        kpi_card("Best Seller", best, "By total revenue", icon="⭐")
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📈 Trends", "🏆 Products", "📦 Inventory", "📅 Weekday", "📊 Export"
@@ -3201,17 +3165,17 @@ def page_insights():
                 sk1, sk2, sk3, sk4 = st.columns(4)
                 with sk1:
                     kpi_card("Best Month (Revenue)", best_rev_row["month_label"],
-                             fmt_naira(best_rev_row["revenue"]))
+                             fmt_naira(best_rev_row["revenue"]), icon="🏆")
                 with sk2:
                     kpi_card("Best Month (Profit)", best_prof_row["month_label"],
-                             fmt_naira(best_prof_row["net_profit"]))
+                             fmt_naira(best_prof_row["net_profit"]), icon="💎")
                 with sk3:
                     kpi_card("Latest Month Growth",
                              f"{'▲' if mom_growth >= 0 else '▼'} {abs(mom_growth):.1f}%",
-                             f"vs previous month", positive=(mom_growth >= 0))
+                             f"vs previous month", positive=(mom_growth >= 0), icon="📈")
                 with sk4:
                     kpi_card("Period Total", fmt_naira(monthly["revenue"].sum()),
-                             f"{int(monthly['txn_count'].sum())} transactions")
+                             f"{int(monthly['txn_count'].sum())} transactions", icon="📊")
 
                 st.markdown("---")
 
@@ -3482,13 +3446,13 @@ def page_admin():
     # Platform stats
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        kpi_card("Total Businesses", str(len(users_df)), "Registered accounts")
+        kpi_card("Total Businesses", str(len(users_df)), "Registered accounts", icon="🏢")
     with c2:
         active = len(users_df[users_df["plan_status"] == "active"])
-        kpi_card("Active Subscriptions", str(active), "Paying or trial users")
+        kpi_card("Active Subscriptions", str(active), "Paying or trial users", icon="✅")
     with c3:
         pending = len(users_df[users_df["plan_status"] == "pending_payment"])
-        kpi_card("Pending Payment", str(pending), "Awaiting manual activation")
+        kpi_card("Pending Payment", str(pending), "Awaiting manual activation", icon="⏳")
     with c4:
         monthly_rev = len(users_df[
             (users_df["plan_type"] == "monthly") &
@@ -3499,7 +3463,7 @@ def page_admin():
             (users_df["plan_status"] == "active")
         ]) * (PAYMENT_DETAILS["yearly_price"] / 12)  # normalise yearly to monthly
         kpi_card("Est. MRR",
-                 fmt_naira(monthly_rev + yearly_rev), "From active paid plans")
+                 fmt_naira(monthly_rev + yearly_rev), "From active paid plans", icon="📈")
 
     # ── Real revenue KPIs from PAYMENTS ledger ──
     payments_df = get_payments_df()
@@ -3522,17 +3486,17 @@ def page_admin():
         r1, r2, r3, r4 = st.columns(4)
         with r1:
             kpi_card("All-Time Revenue", fmt_naira(total_collected),
-                     f"{total_transactions} payments received")
+                     f"{total_transactions} payments received", icon="💰")
         with r2:
             kpi_card("This Month", fmt_naira(month_collected),
-                     now_dt.strftime("%B %Y"))
+                     now_dt.strftime("%B %Y"), icon="📅")
         with r3:
             kpi_card("This Year", fmt_naira(year_collected),
-                     str(now_dt.year))
+                     str(now_dt.year), icon="🗓️")
         with r4:
             avg_per_payment = total_collected / total_transactions if total_transactions else 0
             kpi_card("Avg. per Payment", fmt_naira(avg_per_payment),
-                     "Across all activations & renewals")
+                     "Across all activations & renewals", icon="🧾")
     else:
         st.info("💡 No payment records yet. Revenue will appear here as you activate users.")
 
@@ -3788,18 +3752,18 @@ def page_admin():
                 k1, k2, k3, k4 = st.columns(4)
                 with k1:
                     kpi_card("Current MRR", fmt_naira(current_mrr),
-                             "This month's recurring revenue")
+                             "This month's recurring revenue", icon="💰")
                 with k2:
                     kpi_card("ARR (projected)", fmt_naira(arr),
-                             "MRR × 12")
+                             "MRR × 12", icon="🗓️")
                 with k3:
                     direction = "▲" if mrr_growth >= 0 else "▼"
                     kpi_card("MRR Growth", f"{direction} {abs(mrr_growth):.1f}%",
-                             "vs last month", positive=(mrr_growth >= 0))
+                             "vs last month", positive=(mrr_growth >= 0), icon="📈")
                 with k4:
                     kpi_card("Paid Users", str(int(mrr_df["total"].iloc[-1])),
                              f"{int(mrr_df['monthly'].iloc[-1])} monthly · "
-                             f"{int(mrr_df['yearly'].iloc[-1])} yearly")
+                             f"{int(mrr_df['yearly'].iloc[-1])} yearly", icon="👥")
 
                 st.markdown("---")
 
@@ -3879,17 +3843,17 @@ def page_admin():
                 k1, k2, k3 = st.columns(3)
                 with k1:
                     kpi_card("Expiring in 7 days", str(len(expiring)),
-                             "Need immediate attention", positive=(len(expiring) == 0))
+                             "Need immediate attention", positive=(len(expiring) == 0), icon="⏰")
                 with k2:
                     kpi_card("Already Expired", str(len(already_expired)),
-                             "Lapsed — potential win-back")
+                             "Lapsed — potential win-back", icon="🔴")
                 with k3:
                     trial_u = users_df[
                         (users_df["plan_type"] == "trial") &
                         (users_df["plan_status"] == "active")
                     ]
                     kpi_card("Active Trials", str(len(trial_u)),
-                             "Potential conversions")
+                             "Potential conversions", icon="🧪")
 
                 st.markdown("---")
 
