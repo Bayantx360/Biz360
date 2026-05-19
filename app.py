@@ -1277,12 +1277,12 @@ all in one dashboard designed for the way Nigerian businesses actually work.
         col_a, col_b = st.columns(2)
         with col_a:
             if st.button("Forgot password?", key="goto_forgot",
-                         use_container_width=True):
+                         use_container_width=True, type="primary"):
                 st.session_state.current_page = "forgot_password"
                 st.rerun()
         with col_b:
             if st.button("Create account →", key="goto_signup",
-                         use_container_width=True):
+                         use_container_width=True, type="primary"):
                 st.session_state.current_page = "signup"
                 st.rerun()
 
@@ -1458,7 +1458,7 @@ font-size:0.78rem;color:#8BA0B8;
                 st.error(msg)
 
     st.markdown("---")
-    if st.button("Already have an account? Sign in →", use_container_width=True):
+    if st.button("Already have an account? Sign in →", use_container_width=True, type="primary"):
         st.session_state.current_page = "login"
         st.rerun()
 
