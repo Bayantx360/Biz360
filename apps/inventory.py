@@ -380,41 +380,155 @@ def page_products():
         if products_df.empty:
             st.info("No products found. Add products first.")
         else:
-            st.markdown("#### Add Stock to Existing Product")
+            st.markdown("#### 🔄 Restock a Product")
+
+            # Product selector outside form for reactive reference card
+            product_options = {
+                f"{r['product_name']} ({r.get('base_unit','unit')}s)": r
+                for _, r in products_df.iterrows()
+            }
+            selected_label   = st.selectbox("Select product to restock",
+                                            list(product_options.keys()))
+            selected_product = product_options[selected_label]
+
+            cur_cost      = safe_float(selected_product["cost_price"])
+            cur_sell_pack = safe_float(selected_product["selling_price"])
+            cur_sell_unit = safe_float(selected_product.get("selling_price_sub", 0))
+            cur_stock     = safe_float(selected_product["stock_quantity"])
+            base_unit     = selected_product.get("base_unit", "unit") or "unit"
+            sub_unit      = selected_product.get("sub_unit",  "unit") or "unit"
+            upp           = safe_int(selected_product.get("units_per_pack", 1)) or 1
+
+            # Current prices reference card
+            stock_str = (
+                f"{cur_stock:.0f} {base_unit}s ({cur_stock * upp:.0f} {sub_unit}s)"
+                if upp > 1 else f"{cur_stock:.0f} {base_unit}s"
+            )
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                st.metric("Cost Price", fmt_naira(cur_cost), help=f"Per {base_unit}")
+            with c2:
+                st.metric("Sell / Pack", fmt_naira(cur_sell_pack), help=f"Per {base_unit}")
+            with c3:
+                st.metric("Sell / Unit", fmt_naira(cur_sell_unit), help=f"Per {sub_unit}")
+            with c4:
+                st.metric("Current Stock", stock_str)
+
+            st.markdown("---")
+
             with st.form("restock_form", clear_on_submit=True):
-                product_options = {
-                    f"{r['product_name']} (Current: {int(r['stock_quantity'])} units)": r
-                    for _, r in products_df.iterrows()
-                }
-                selected_label   = st.selectbox("Select product", list(product_options.keys()))
-                selected_product = product_options[selected_label]
-                add_qty          = st.number_input("Units to add", min_value=1, step=1, value=10)
-                restock_note     = st.text_input("Note (optional)",
-                                                 placeholder="e.g. Weekly supplier delivery")
-                submitted        = st.form_submit_button("🔄 Update Stock",
-                                                         use_container_width=True, type="primary")
+
+                # Delivery details
+                st.markdown("**📥 New Delivery**")
+                rd1, rd2 = st.columns(2)
+                add_qty      = rd1.number_input(
+                    f"Packs Received ({base_unit}s) *",
+                    min_value=1, step=1, value=10,
+                    help=f"Number of {base_unit}s received from supplier",
+                )
+                restock_note = rd2.text_input(
+                    "Supplier / Note", placeholder="e.g. Alhaji Musa delivery"
+                )
+
+                st.markdown("---")
+
+                # Price update section
+                st.markdown("**💰 Update Prices**")
+                update_prices = st.checkbox(
+                    "Supplier prices have changed — update now",
+                    value=False,
+                    help="Tick this if cost or selling prices changed with this delivery",
+                )
+
+                if update_prices:
+                    st.caption("Pre-filled with current prices. Edit only what changed.")
+
+                    new_cost = st.number_input(
+                        f"New Cost Price per {base_unit} (₦)",
+                        min_value=0.0, step=50.0, value=float(cur_cost),
+                    )
+                    if new_cost != cur_cost and cur_cost > 0:
+                        diff = new_cost - cur_cost
+                        pct  = diff / cur_cost * 100
+                        icon = "📈 Cost UP" if diff > 0 else "📉 Cost DOWN"
+                        st.caption(f"{icon} by {fmt_naira(abs(diff))} ({abs(pct):.1f}%)")
+
+                    st.markdown("**Pack Selling Price**")
+                    new_sell_pack = st.number_input(
+                        f"New Selling Price per {base_unit} (₦)",
+                        min_value=0.0, step=50.0, value=float(cur_sell_pack),
+                    )
+                    if new_cost > 0 and new_sell_pack > 0:
+                        pm = new_sell_pack - new_cost
+                        st.caption(
+                            f"New pack margin: {fmt_naira(pm)} ({pm/new_sell_pack*100:.1f}%)"
+                        )
+
+                    st.markdown("**Unit Selling Price**")
+                    suggested_unit = round(new_sell_pack / upp, 2) if upp > 1 else new_sell_pack
+                    new_sell_unit  = st.number_input(
+                        f"New Selling Price per {sub_unit} (₦)",
+                        min_value=0.0, step=50.0,
+                        value=float(cur_sell_unit) if cur_sell_unit > 0 else float(suggested_unit),
+                        help=f"Suggested: {fmt_naira(suggested_unit)}" if upp > 1 else "",
+                    )
+                    if upp > 1 and new_sell_unit > 0 and new_cost > 0:
+                        um = new_sell_unit - (new_cost / upp)
+                        st.caption(
+                            f"New unit margin: {fmt_naira(um)} | "
+                            f"All {upp} units = {fmt_naira(new_sell_unit * upp)} "
+                            f"vs pack {fmt_naira(new_sell_pack)}"
+                        )
+                else:
+                    new_cost      = cur_cost
+                    new_sell_pack = cur_sell_pack
+                    new_sell_unit = cur_sell_unit
+
+                submitted = st.form_submit_button(
+                    "🔄 Confirm Restock", use_container_width=True, type="primary"
+                )
 
             if submitted:
-                new_qty = int(selected_product["stock_quantity"]) + add_qty
-                ok      = db_update(TBL_PRODUCTS, "product_id",
-                                    selected_product["product_id"], {"stock_quantity": new_qty})
+                new_qty = cur_stock + add_qty
+                updates = {"stock_quantity": new_qty}
+                if update_prices:
+                    updates["cost_price"]        = new_cost
+                    updates["selling_price"]     = new_sell_pack
+                    updates["selling_price_sub"] = new_sell_unit
+
+                ok = db_update(TBL_PRODUCTS, "product_id",
+                               selected_product["product_id"], updates)
                 if ok:
                     db_insert(TBL_RESTOCK, {
-                        "restock_id":   gen_id("RST"),
-                        "business_id":  business_id,
-                        "product_id":   selected_product["product_id"],
-                        "product_name": selected_product["product_name"],
-                        "qty_added":    add_qty,
-                        "qty_before":   int(selected_product["stock_quantity"]),
-                        "qty_after":    new_qty,
-                        "note":         restock_note.strip() if restock_note else "",
-                        "recorded_by":  user.get("full_name", user.get("email", "")),
-                        "restock_date": datetime.now().isoformat(),
+                        "restock_id":     gen_id("RST"),
+                        "business_id":    business_id,
+                        "product_id":     selected_product["product_id"],
+                        "product_name":   selected_product["product_name"],
+                        "qty_added":      add_qty,
+                        "qty_before":     cur_stock,
+                        "qty_after":      new_qty,
+                        "note":           restock_note.strip() if restock_note else "",
+                        "recorded_by":    user.get("full_name", user.get("email", "")),
+                        "restock_date":   datetime.now().isoformat(),
+                        "old_cost_price": cur_cost,
+                        "new_cost_price": new_cost      if update_prices else None,
+                        "old_sell_pack":  cur_sell_pack,
+                        "new_sell_pack":  new_sell_pack if update_prices else None,
+                        "old_sell_unit":  cur_sell_unit,
+                        "new_sell_unit":  new_sell_unit if update_prices else None,
+                        "prices_updated": update_prices,
                     })
-                    st.success(
-                        f"✅ Stock updated! {selected_product['product_name']}: "
-                        f"{int(selected_product['stock_quantity'])} → {new_qty} units"
+                    msg = (
+                        f"✅ Restocked! {selected_product['product_name']}: "
+                        f"{cur_stock:.0f} → {new_qty:.0f} {base_unit}s"
                     )
+                    if update_prices:
+                        msg += (
+                            f" | Prices updated — Cost: {fmt_naira(new_cost)}, "
+                            f"Pack: {fmt_naira(new_sell_pack)}, "
+                            f"Unit: {fmt_naira(new_sell_unit)}"
+                        )
+                    st.success(msg)
                     st.rerun()
                 else:
                     st.error("Failed to update stock.")
