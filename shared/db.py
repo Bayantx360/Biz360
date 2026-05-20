@@ -187,10 +187,25 @@ def get_sales_df(business_id: str) -> pd.DataFrame:
     return df
 
 
+def get_products_df_live(business_id: str) -> pd.DataFrame:
+    """
+    Return typed products DataFrame — NO cache.
+    Use this wherever stock accuracy is critical:
+      - Record Sale page (cart availability)
+      - Dashboard low-stock alerts
+    """
+    return _type_products_df(db_fetch(TBL_PRODUCTS, {"business_id": business_id}))
+
+
 @st.cache_data(ttl=30, show_spinner=False)
 def get_products_df(business_id: str) -> pd.DataFrame:
-    """Return typed products DataFrame for this business."""
+    """Return typed products DataFrame — cached 30s. Use for reports/insights."""
     df = db_fetch(TBL_PRODUCTS, {"business_id": business_id})
+    return _type_products_df(df)
+
+
+def _type_products_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply correct types to a raw products DataFrame."""
     if df.empty:
         return pd.DataFrame()
     df["selling_price"]     = pd.to_numeric(df["selling_price"],     errors="coerce").fillna(0)
@@ -199,7 +214,6 @@ def get_products_df(business_id: str) -> pd.DataFrame:
     df["reorder_level"]     = pd.to_numeric(df["reorder_level"],     errors="coerce").fillna(0)
     df["units_per_pack"]    = pd.to_numeric(df.get("units_per_pack", 1),    errors="coerce").fillna(1).astype(int)
     df["selling_price_sub"] = pd.to_numeric(df.get("selling_price_sub", 0), errors="coerce").fillna(0)
-    # Ensure unit columns exist with safe defaults
     if "base_unit" not in df.columns: df["base_unit"] = "unit"
     if "sub_unit"  not in df.columns: df["sub_unit"]  = "unit"
     df["base_unit"] = df["base_unit"].fillna("unit")
