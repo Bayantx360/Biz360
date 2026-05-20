@@ -489,7 +489,7 @@ def page_products():
                 )
 
             if submitted:
-                new_qty = cur_stock + add_qty
+                new_qty = int(round(cur_stock + add_qty))
                 updates = {"stock_quantity": new_qty}
                 if update_prices:
                     updates["cost_price"]        = new_cost
@@ -569,4 +569,4 @@ def page_products():
                     "recorded_by":  "Recorded By",
                 }),
                 use_container_width=True,
-          )
+                      )
