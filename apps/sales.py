@@ -466,7 +466,8 @@ def page_record_sale():
                             "gross_profit": item["gross_profit"],
                         })
                     # Deduct stock — business_id filter satisfies RLS.
-                    # Always cast to int to match Supabase integer column type.
+                    # stock_quantity is float8 in Supabase to support sub-unit sales
+                    # (e.g. selling 3 out of a 12-unit bag deducts 0.25 bags).
                     live_products = get_products_df_live(business_id)
                     for item in cart:
                         if not live_products.empty:
@@ -474,7 +475,14 @@ def page_record_sale():
                             if not pr.empty:
                                 current   = safe_float(pr.iloc[0]["stock_quantity"])
                                 deduct    = safe_float(item.get("stock_deduct", item["quantity"]))
-                                new_stock = int(max(0, round(current - deduct)))
+                                raw       = current - deduct
+                                # Keep fractional stock for sub-unit products (upp > 1),
+                                # whole numbers only for products sold in full packs only.
+                                upp       = safe_int(pr.iloc[0].get("units_per_pack", 1)) or 1
+                                if upp > 1:
+                                    new_stock = round(max(0.0, raw), 4)  # float, e.g. 9.75 bags
+                                else:
+                                    new_stock = int(max(0, round(raw)))  # integer, e.g. 7 units
                                 db_update(TBL_PRODUCTS, "product_id", item["product_id"],
                                           {"stock_quantity": new_stock})
 
