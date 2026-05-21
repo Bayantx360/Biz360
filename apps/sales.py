@@ -543,22 +543,12 @@ def page_record_sale():
                 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
                 from reportlab.pdfbase import pdfmetrics
                 from reportlab.pdfbase.ttfonts import TTFont
-                import urllib.request, os, tempfile
+                import os
 
-                # Download DejaVuSans which supports the ₦ Naira symbol
-                _font_dir  = tempfile.gettempdir()
-                _font_path = os.path.join(_font_dir, "DejaVuSans.ttf")
-                _fontb_path = os.path.join(_font_dir, "DejaVuSans-Bold.ttf")
-                if not os.path.exists(_font_path):
-                    urllib.request.urlretrieve(
-                        "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf",
-                        _font_path
-                    )
-                if not os.path.exists(_fontb_path):
-                    urllib.request.urlretrieve(
-                        "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans-Bold.ttf",
-                        _fontb_path
-                    )
+                # Load DejaVuSans bundled in assets/ folder — supports ₦ Naira symbol
+                _assets     = os.path.join(os.path.dirname(__file__), "..", "assets")
+                _font_path  = os.path.join(_assets, "DejaVuSans.ttf")
+                _fontb_path = os.path.join(_assets, "DejaVuSans-Bold.ttf")
                 try:
                     pdfmetrics.registerFont(TTFont("DejaVuSans",     _font_path))
                     pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", _fontb_path))
