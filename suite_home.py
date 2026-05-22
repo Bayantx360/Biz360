@@ -88,7 +88,7 @@ def page_login():
     st.markdown("""
 <div class="lp-hero">
   <div class="lp-logo-wrap">
-    <div class="lp-logo-icon">📊</div>
+    <div class="lp-logo-icon">📊</div><br>
     <div class="lp-logo-text">BizTrack-OS</div>
   </div>
   
