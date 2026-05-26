@@ -24,6 +24,7 @@ from shared.db import (
     get_products_df, get_products_df_live, get_sales_df, get_expenses_df,
     compute_insights,
     db_fetch, db_insert, db_update, db_delete,
+    get_restock_df,
     TBL_PRODUCTS, TBL_RESTOCK,
     gen_id, fmt_naira, safe_float, safe_int,
 )
@@ -539,13 +540,10 @@ def page_products():
     # ══════════════════════════════════════
     with tab4:
         section_header("📜 Restock History")
-        restock_df = db_fetch(TBL_RESTOCK, {"business_id": business_id})
+        restock_df = get_restock_df(business_id)
         if restock_df.empty:
             st.info("No restock history yet. Every restock will be logged here automatically.")
         else:
-            restock_df["restock_date"] = pd.to_datetime(
-                restock_df["restock_date"], errors="coerce", utc=True
-            ).dt.tz_localize(None)
             restock_df = restock_df.sort_values("restock_date", ascending=False)
 
             search_rst = st.text_input("🔍 Search by product name", key="restock_search",
