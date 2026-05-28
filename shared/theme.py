@@ -61,6 +61,9 @@ def apply_suite_css():
   --font-mono:    'DM Mono', monospace;
 }
 
+/* ── Force dark rendering regardless of OS/browser theme ── */
+html { color-scheme: dark !important; }
+
 /* ─────────────────────────────────────────────
    Streamlit Header & Toolbar
 ───────────────────────────────────────────── */
@@ -267,6 +270,11 @@ html, body, [class*="css"], .stApp {
 /* ── Expanders ── */
 [data-testid="stExpander"] { background:var(--surface); border:1px solid var(--border); border-radius:10px; }
 [data-testid="stExpander"]:hover { border-color:var(--border2); }
+[data-testid="stExpander"] summary { color:var(--text-primary) !important; }
+[data-testid="stExpander"] summary p,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] summary div { color:var(--text-primary) !important; }
+[data-testid="stExpander"] summary svg { stroke:var(--text-primary) !important; fill:var(--text-primary) !important; }
 </style>
 """)
 
@@ -302,15 +310,15 @@ def section_header(title: str):
 <div style="
   font-family:'Syne',sans-serif;
   font-size:0.95rem; font-weight:700;
-  color:#F0F4F8; letter-spacing:-0.01em;
+  color:var(--text-primary); letter-spacing:-0.01em;
   margin:1.75rem 0 0.875rem 0;
   padding-bottom:0.5rem;
-  border-bottom:1px solid #1F2D3D;
+  border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:0.5rem;
 ">
   <span style="
     display:inline-block; width:3px; height:16px;
-    background:#F5A623; border-radius:2px; flex-shrink:0;
+    background:var(--gold); border-radius:2px; flex-shrink:0;
   "></span>
   {title}
 </div>
@@ -324,19 +332,19 @@ def page_header(title: str, subtitle: str = ""):
 <div style="
   display:flex; justify-content:space-between; align-items:flex-start;
   margin-bottom:1.5rem; padding-bottom:1rem;
-  border-bottom:1px solid #1F2D3D;
+  border-bottom:1px solid var(--border);
 ">
   <div>
     <div style="
       font-family:'Syne',sans-serif;
       font-size:1.6rem; font-weight:800;
-      color:#F0F4F8; letter-spacing:-0.04em;
+      color:var(--text-primary); letter-spacing:-0.04em;
       line-height:1.1; margin-bottom:0.25rem;
     ">{title}</div>
-    {f'<div style="font-size:0.85rem;color:#4A6080;">{subtitle}</div>' if subtitle else ""}
+    {f'<div style="font-size:0.85rem;color:var(--text-muted);">{subtitle}</div>' if subtitle else ""}
   </div>
   <div style="
-    font-size:0.75rem; color:#4A6080; text-align:right;
+    font-size:0.75rem; color:var(--text-muted); text-align:right;
     font-family:'DM Mono',monospace; margin-top:0.35rem;
   ">{now_str}</div>
 </div>
