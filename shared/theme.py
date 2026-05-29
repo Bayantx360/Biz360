@@ -61,9 +61,6 @@ def apply_suite_css():
   --font-mono:    'DM Mono', monospace;
 }
 
-/* ── Force dark rendering regardless of OS/browser theme ── */
-html { color-scheme: dark !important; }
-
 /* ─────────────────────────────────────────────
    Streamlit Header & Toolbar
 ───────────────────────────────────────────── */
@@ -270,11 +267,28 @@ html, body, [class*="css"], .stApp {
 /* ── Expanders ── */
 [data-testid="stExpander"] { background:var(--surface); border:1px solid var(--border); border-radius:10px; }
 [data-testid="stExpander"]:hover { border-color:var(--border2); }
-[data-testid="stExpander"] summary { color:var(--text-primary) !important; }
-[data-testid="stExpander"] summary p,
-[data-testid="stExpander"] summary span,
-[data-testid="stExpander"] summary div { color:var(--text-primary) !important; }
-[data-testid="stExpander"] summary svg { stroke:var(--text-primary) !important; fill:var(--text-primary) !important; }
+
+/* Fix expander header text — targets every known Streamlit structure */
+[data-testid="stExpander"] > details > summary,
+[data-testid="stExpander"] > details > summary *,
+[data-testid="stExpander"] details summary,
+[data-testid="stExpander"] details summary p,
+[data-testid="stExpander"] details summary span,
+[data-testid="stExpander"] details summary div,
+[data-testid="stExpander"] details > summary > span,
+[data-testid="stExpander"] .streamlit-expanderHeader,
+[data-testid="stExpander"] .streamlit-expanderHeader p,
+[data-testid="stExpanderToggleIcon"],
+div[data-testid="stExpander"] summary {
+  color: var(--text-primary) !important;
+  background-color: var(--surface) !important;
+}
+
+/* Expander chevron icon */
+[data-testid="stExpander"] details summary svg {
+  stroke: var(--text-primary) !important;
+  fill: none !important;
+}
 </style>
 """)
 
