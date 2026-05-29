@@ -140,7 +140,7 @@ def page_login():
     if biz_count > 0:
         avatar_colors = [
             ("E8F4FD", "1A6FA8"),
-            ("E8F8F1", "1A7A4A"),
+            ("EAB308", "1A7A4A"),
             ("FEF9E7", "A07A10"),
             ("FDEDEC", "A83228"),
         ]
