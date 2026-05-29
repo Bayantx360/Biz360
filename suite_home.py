@@ -222,7 +222,7 @@ def page_login():
 <div style="
   margin-top:2rem;
   padding-top:1.25rem;
-  border-top:1px solid #1F2D3D;
+  
   text-align:center;
 ">
   <div style="font-size:0.72rem;color:#4A6080;margin-bottom:0.75rem;
