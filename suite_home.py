@@ -141,7 +141,7 @@ def page_login():
         avatar_colors = [
             ("E8F4FD", "1A6FA8"),
             ("CFFAFE", "1A7A4A"),
-            ("E8F8F1", "A07A10"),
+            ("FEF3C7", "A07A10"),
             ("FDEDEC", "A83228"),
         ]
         avatars_html = ""
