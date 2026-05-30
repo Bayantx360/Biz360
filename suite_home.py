@@ -110,14 +110,14 @@ def page_login():
   <div class="lp-headline">Run your business<br><span>smarter, and more efficiently</span></div>
   <div class="lp-sub">
     Sales · Inventory · Business Health — three powerful tool,
-    one unified platform built for Entrepreneurs & Businesses
+    one unified platform built for Business owners & managers
   </div>
   <div class="lp-value-grid">
     <div class="lp-value-card">
       <div class="lp-value-icon">💰</div>
       <div class="lp-value-title">Sales Management</div>
       <div class="lp-value-desc">Record sales with multi-item carts,
-        instant PDF receipts and WhatsApp sharing.</div>
+        instantly generate PDF receipts and share on WhatsApp.</div>
     </div>
     <div class="lp-value-card">
       <div class="lp-value-icon">📦</div>
@@ -129,7 +129,7 @@ def page_login():
       <div class="lp-value-icon">🧠</div>
       <div class="lp-value-title">Business Health</div>
       <div class="lp-value-desc">Profit/loss, expenses, trend charts and
-        AI-powered insights — all in one view.</div>
+        Data-driven insights — all in one view.</div>
     </div>
   </div>
 </div>
@@ -140,8 +140,8 @@ def page_login():
     if biz_count > 0:
         avatar_colors = [
             ("E8F4FD", "1A6FA8"),
-            ("E8F8F1", "1A7A4A"),
-            ("FEF9E7", "A07A10"),
+            ("CFFAFE", "1A7A4A"),
+            ("FEF3C7", "A07A10"),
             ("FDEDEC", "A83228"),
         ]
         avatars_html = ""
@@ -169,9 +169,9 @@ def page_login():
 <div style="display:flex;align-items:center;justify-content:center;
             gap:14px;padding:14px 0 6px;">
   <div style="display:flex;align-items:center;">{avatars_html}</div>
-  <div style="font-size:13px;color:#7A8499;line-height:1.4;">
-    <strong style="color:#E8EAF0;">{biz_count} {label}</strong>
-    already running their<br>business on BizTrack-OS</strong>
+  <div style="font-size:13px;color:#10B981;line-height:1.4;">
+    <strong style="color:#EAB308;">{biz_count} {label}</strong>
+    are already running their<br>business efficiently with <strong style="color:#EAB308;"> BizTrack-OS</strong>
   </div>
 </div>
         """, unsafe_allow_html=True)
@@ -213,21 +213,20 @@ def page_login():
 
         st.markdown("""
 <div class="lp-trust-strip">
-  <span class="lp-trust-item"><span>🔒</span> Bank-level encryption</span>
-  <span class="lp-trust-item"><span>☁️</span> Cloud-backed daily</span>
-  <span class="lp-trust-item"><span>📱</span> Works on mobile</span>
+  <span class="lp-trust-item"><span>🔒</span> Password secured login</span>
+  <span class="lp-trust-item"><span>☁️</span> Data backed on cloud daily</span>
+  <span class="lp-trust-item"><span>📱</span> Works on mobile phones </span>
   <span class="lp-trust-item"><span>🏣</span> Built for all SMEs</span>
 </div>
 
 <div style="
   margin-top:2rem;
   padding-top:1.25rem;
-  border-top:1px solid #1F2D3D;
   text-align:center;
 ">
   <div style="font-size:0.72rem;color:#4A6080;margin-bottom:0.75rem;
     font-family:'DM Mono',monospace;letter-spacing:0.05em;">
-    Connect With Us
+    For Issues & Enquiries<br>Contact Us:
   </div>
   <div style="display:flex;justify-content:center;gap:1.25rem;flex-wrap:wrap;">
     <a href="https://wa.me/+2348136362633"
@@ -272,7 +271,7 @@ def page_signup():
 <div style="text-align:center;margin-bottom:1.5rem;">
   <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;
     color:#F0F4F8;letter-spacing:-0.04em;">Create your account</div>
-  <div style="font-size:0.85rem;color:#4A6080;margin-top:0.3rem;">
+  <div style="font-size:0.85rem;color:#22C55E;margin-top:0.3rem;">
     Start with a 14-day free trial. No credit card required.</div>
 </div>
         """, unsafe_allow_html=True)
